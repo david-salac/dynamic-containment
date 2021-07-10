@@ -1,0 +1,57 @@
+version: "3.9"
+   
+services:
+  # Postgres
+  db:
+    image: postgres:latest
+    restart: always
+    volumes:
+      - ./infrastructure/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  # Redis (for Celery task queues)
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - 6389:6389
+    command: redis-server --port 6389 --requirepass nxaaLkv8  # <- PASSWORD
+
+  # Base Celery worker
+  celery_worker_1:
+    build:
+      context: .
+      dockerfile: infrastructure/web_app/Dockerfile
+    command: >
+      sh -c "celery --app config.celery:CELERY_APP worker --loglevel=INFO --concurrency=1 --max-tasks-per-child=1"
+    working_dir: /src
+    environment:
+      - ENVIRONMENT=LOCAL
+    volumes:
+      - ./dynamic_containment:/src
+    depends_on:
+      - redis
+
+  # Django application
+  web_app:
+    build:
+      context: .
+      dockerfile: infrastructure/web_app/Dockerfile
+    restart: always
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    working_dir: /src
+    environment:
+      - ENVIRONMENT=LOCAL
+    volumes:
+      - ./dynamic_containment:/src
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
