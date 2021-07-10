@@ -37,6 +37,8 @@ are two important end-points:
       "datetime_day": DAY_OF_YEAR_WITH_FORMAT_YYYY_MM_DD
    }
    ```
+   Default values are `Habitat Energy Limited` for the `organization` field
+   and today for the `datetime_day` field.
    For example:
    ```json
    {
