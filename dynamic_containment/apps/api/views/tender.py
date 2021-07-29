@@ -49,3 +49,18 @@ class AuctionResultsViewSet(viewsets.ReadOnlyModelViewSet):
             },
             status=http_status.HTTP_200_OK
         )
+
+
+from rest_framework import mixins, views
+from rest_framework.permissions import AllowAny
+
+class Tiles(mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.ViewSet):
+    permission_classes = [AllowAny]
+
+    def list(self, request, *args, **kwargs):
+
+        return Response({
+            'kwargs': str(kwargs),
+            'args': str(args),
+            'req': str(request.query_params)
+        })
